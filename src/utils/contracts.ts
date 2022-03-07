@@ -52,32 +52,40 @@ export const contractReader = async ({
   write = false,
   params = [],
 }: IContractReaderParam) => {
-  await checkWeb3Instance();
-  let result: any = "";
-  const account = await getWallet();
-
-  const { address, abi } = getContractInfo(contractName);
-  const contractInstance = await createContract({ abi, address });
-  const fucntionRef = contractInstance.methods?.[functionName];
-  const callMethod = !write ? "call" : "send";
-
-  contractsObj = {
-    ...contractsObj,
-    [contractName]: contractInstance,
-    test: fucntionRef,
-    result,
-  };
-  (window as any).contractsObj = contractsObj;
-
   return new Promise(async (resolve, reject) => {
-    if (!write) {
-      result = await fucntionRef(...params)?.[callMethod]?.(...params);
-      resolve(result);
-    } else {
-      fucntionRef(...params)
-        ?.[callMethod]?.({ from: account })
-        .once("receipt", (rec: any) => resolve(rec))
-        .on("error", (error: any) => reject(error));
+    try {
+      const account = await getWallet();
+      let result: any = "";
+
+      const { address, abi } = getContractInfo(contractName);
+      const contractInstance = await createContract({ abi, address });
+      const fucntionRef = contractInstance.methods?.[functionName];
+      const callMethod = !write ? "call" : "send";
+
+      contractsObj = {
+        ...contractsObj,
+        [contractName]: contractInstance,
+        test: fucntionRef,
+        result,
+      };
+      (window as any).contractsObj = contractsObj;
+      console.log({ write, functionName });
+
+      if (!write) {
+        result = await fucntionRef(...params)?.[callMethod]?.(...params);
+        console.log({ result });
+
+        resolve(result);
+      } else {
+        console.log({ params, account });
+
+        fucntionRef(...params)
+          ?.[callMethod]?.({ from: account })
+          .once("receipt", (rec: any) => resolve(rec))
+          .on("error", (error: any) => reject(error));
+      }
+    } catch (error: any) {
+      reject(error.message);
     }
   });
 };

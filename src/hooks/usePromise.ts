@@ -23,6 +23,10 @@ export const usePromise = (promiseFunction: any, baseConfig?: IBaseConfig) => {
     setHookState({ ...hookState, ...newState });
   };
 
+  const errorAlert = (error: any) => {
+    if (baseConfig?.showError) alert(JSON.stringify({ err: error.message }));
+  };
+
   function executePromise(...params: any[]) {
     updateHookState({ loading: true });
     const _params: any[] = [...params];
@@ -31,7 +35,7 @@ export const usePromise = (promiseFunction: any, baseConfig?: IBaseConfig) => {
         params?.find((param) => param?.onSuccess)?.onSuccess ||
         baseConfig?.onSuccess;
 
-      return promiseFunction([])
+      return promiseFunction(...params)
         .then(async (value: any) => {
           await wait(baseConfig?.sleep);
           updateHookState({ response: value, loading: false });
@@ -39,12 +43,15 @@ export const usePromise = (promiseFunction: any, baseConfig?: IBaseConfig) => {
           return value;
         })
         .catch((err: any) => {
+          errorAlert(err);
           const errorMessage = err?.message || err || DEFAULT_ERROR;
           updateHookState({ error: errorMessage, loading: false });
           baseConfig?.onError?.(errorMessage);
         });
-    } catch (error) {
+    } catch (error: any) {
+      errorAlert(error);
       updateHookState({ error, loading: false });
+      baseConfig?.onError?.(error.message);
     }
   }
   useEffect(() => {

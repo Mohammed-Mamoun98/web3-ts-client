@@ -1,4 +1,4 @@
-import { setupMetamask, setupWeb3, _window } from "../utils/web3";
+import { enableMM, setupMetamask, setupWeb3, _window } from "../utils/web3";
 import { wait } from "./time";
 
 export const checkWeb3Instance: () => any = async () => {
@@ -13,7 +13,7 @@ export const checkWeb3Instance: () => any = async () => {
 };
 
 export const getWallet = async () => {
-  await checkWeb3Instance();
+  await enableMM();
   const [account] = await (window as any)._web3.eth.getAccounts();
   return account;
 };
